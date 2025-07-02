@@ -1,5 +1,8 @@
-from settings import PLAYER_LIVES, POINTS_FOR_FIGHT, POINTS_FOR_KILLING, ALLOWED_ATTACKS, MODE_MULTIPLIER
+from .settings import PLAYER_LIVES, POINTS_FOR_FIGHT, POINTS_FOR_KILLING, ALLOWED_ATTACKS, MODE_MULTIPLIER
 import random
+from .exceptions import EnemyDown, GameOver
+
+
 
 class Player:
 
@@ -16,8 +19,12 @@ class Player:
         Задает кол-во поинтов (изначательно 0)
         Ничего не возвращяет
         """
-
-        self.name = input("What is your name: ")
+        while True:
+            self.name = input("What is your name: ").strip()
+            if self.name.strip():
+                break
+            else:
+                print("Try again")
         self.lives = PLAYER_LIVES
         self.score = 0
 
@@ -28,21 +35,16 @@ class Player:
         Превращается в строку (Камень, Ножницы, Бумага) которое потом используется в методе fight()
         Возвращяет строку
         """
+        while True:
+            choosing_attack = input("Choose Paper|Stone|Scissors (1,2,3): ").strip()
+            if choosing_attack == "1" or choosing_attack == "2" or choosing_attack == "3":
+                break
+            else:
+                print("Try again")
 
-        choosing_attack = input("Choose Paper|Stone|Scissors (1,2,3): ")
         return ALLOWED_ATTACKS[choosing_attack]
 
-    def game_over(self) -> None:
 
-        """
-        Метод остонавливает программу
-        Ничего не возвращяет
-        """
-
-        print("You lost :(")
-        print(f"You got {self.score} points")
-        raise SystemExit  
-    
     def decrease_lives(self) -> None:
 
         """
@@ -51,6 +53,8 @@ class Player:
         """
 
         self.lives -= 1
+        if self.lives == 0:
+            raise GameOver
         
     def add_score_for_fight(self, difficulty_mode: str) -> None:
 
@@ -72,6 +76,9 @@ class Player:
 
          self.score += POINTS_FOR_KILLING * MODE_MULTIPLIER[difficulty_mode]
 
+    def restart_lives(self):
+        self.lives = PLAYER_LIVES
+
 class Enemy:
 
     lives: int
@@ -79,7 +86,7 @@ class Enemy:
 
     def __init__(self, difficulty_mode: str) -> None:
 
-         """
+        """
         Инициалезирует обьект врага
         Принимает имя
         Задает кол-во жизней (уровень * сложность)
@@ -90,7 +97,7 @@ class Enemy:
         self.level = 1
         self.lives = self.level * MODE_MULTIPLIER[difficulty_mode]
 
-    def select_attack(self) -> str:
+    def enemy_attack(self) -> str:
 
         """
         Рандомно генерирует число (от 1 до 3)
@@ -98,8 +105,7 @@ class Enemy:
         Возвращяет строку
         """
 
-        random_number_attack = random.randint(1, 3)
-        enemy_attack = str(random_number_attack)
+        enemy_attack = str(random.randint(1, 3))
         return ALLOWED_ATTACKS[enemy_attack]
 
     def increase_level(self) -> None:
@@ -120,7 +126,7 @@ class Enemy:
 
         self.lives = self.level * MODE_MULTIPLIER[difficulty_mode]
 
-    def recreate_enemy(self, player: object, difficulty_mode: str) -> None:
+    def recreate_enemy(self, difficulty_mode: str) -> None:
 
         """
         Метод принимает обьект игрока
@@ -133,11 +139,11 @@ class Enemy:
         """
 
         self.increase_level()
-        self.restart_lives()
-        player.add_score_for_killing(difficulty_mode) 
-        print(f"You defeated enemy, enemy has now level {self.enemy.level} and {self.enemy.lives} hp")
+        self.restart_lives(difficulty_mode)
+         
+        
 
-    def decrease_lives(self, player: object, difficulty_mode: str) -> None:
+    def decrease_lives(self) -> None:
 
         """
         Метод принимает обьект игрока и уровень сложности
@@ -147,4 +153,6 @@ class Enemy:
         """
 
         self.lives -= 1
-        player.add_score_for_fight(difficulty_mode) 
+        if self.lives == 0:
+            raise EnemyDown
+            
