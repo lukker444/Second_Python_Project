@@ -1,6 +1,8 @@
 from game.models import Player, Enemy
 from .settings import ATTACK_PAIRS_OUTCOME
 from .exceptions import EnemyDown, GameOver
+from game.score import SaveRecord
+
 
 class Game:
     player: object
@@ -93,6 +95,8 @@ class Game:
             except(GameOver):
                 print("Game Over")
                 print(f"You got {self.player.score} points")
+                save_record = SaveRecord()
+                save_record.save(self.player.name, self.difficulty_mode, self.player.score)
                 break
                 
 
