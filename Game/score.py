@@ -23,28 +23,28 @@ class GameSave:
 
     def __init__(self):
         self.records = []
-    
-    def add_line(self, name, difficulty_mode, score):
-        with open(SCORE_FILE, "a") as file:
-            file.write(f"{name}|{difficulty_mode}|{score}")
-    
+     
     def file_rewrite(self):
         with open(SCORE_FILE, "w") as file:
             for player in self.records:
                 file.write(f"{player.name}|{player.difficulty_mode}|{player.score}\n")
     
+    def create_player_record(self, name, difficulty_mode, score):
+        new_player = PlayerRecord(name, difficulty_mode, score)
+        self.records.append(new_player)
+
     def add_record(self, name, difficulty_mode, score):
         for player in self.records:
             if player.name == name and player.difficulty_mode == difficulty_mode:
                 if score > player.score: 
                     player.score = score
                 return
-        new_player = PlayerRecord(name, difficulty_mode, score)
-        self.records.append(new_player)
-        self.add_line(name, difficulty_mode, score)
-
+        self.create_player_record(name, difficulty_mode, score)
+        
     def prepare_record(self):
         self.records.sort(reverse=True, key=lambda x: x.score)
+        self.records = self.records[:5]
+        
 
 
 class ReadScoreFile:
@@ -59,18 +59,15 @@ class ReadScoreFile:
             file_text = file.readlines()
             return file_text
 
-    def read(self, name, difficulty_mode, score, game_save):
+    def read(self, game_save):
         lines = self.read_file()
-        if not lines:
-            return None
-        else:
-            for line in lines:
-                parts = line.strip().split("|")
-                name = parts[0].strip()
-                difficulty_mode = parts[1].strip()
-                score = int(parts[2].strip())
-                player = PlayerRecord(name, difficulty_mode, score)
-                game_save.records.append(player)
+        for line in lines:
+            parts = line.strip().split("|")
+            name = parts[0].strip()
+            difficulty_mode = parts[1].strip()
+            score = int(parts[2].strip())
+            player = PlayerRecord(name, difficulty_mode, score)
+            game_save.records.append(player)
     
 
 class SaveRecord:
@@ -82,10 +79,19 @@ class SaveRecord:
         self.read_score_file = ReadScoreFile()
     
     def save(self, name, difficulty_mode, score):
-        self.read_score_file.read(name, difficulty_mode, score, self.game_record)
+        self.read_score_file.read(self.game_record)
         self.game_record.add_record(name, difficulty_mode, score)
         self.game_record.prepare_record()
         self.game_record.file_rewrite()
+    
+    def display_records(self):
+        self.read_score_file.read(self.game_record)
+        if not self.game_record.records:
+            print("\nThere aren't any written scores in file\n")
+        else:
+            for player in self.game_record.records:
+                print(f"{player}")
+
     
     
 
