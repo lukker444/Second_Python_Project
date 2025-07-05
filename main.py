@@ -1,4 +1,3 @@
-from game.models import Player, Enemy
 from game.game import Game
 from game.score import SaveRecord
 
